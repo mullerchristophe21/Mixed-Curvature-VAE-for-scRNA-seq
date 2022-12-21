@@ -122,20 +122,6 @@ def main() -> None:
            'cd14_mono_eryth_latent_250epoch.tsv',
            z_mean)
 
-    # the log-likelihoods
-    ll = model.get_log_likelihood(x, batch)
-    np.savetxt(save_path +
-           'cd14_mono_eryth_ll_250epoch.tsv',
-           z_mean)
-
-    # Plotting log-likelihood and kl-divergence at each iteration
-    plot_trace([np.arange(len(trainer.status['kl_divergence']))*50] * 2,
-           [trainer.status['log_likelihood'], trainer.status['kl_divergence']],
-           ['log_likelihood', 'kl_divergence'])
-# plt.show()
-
-    plt.savefig(save_path +
-            'cd14_mono_eryth_train.png')
 
 
 
