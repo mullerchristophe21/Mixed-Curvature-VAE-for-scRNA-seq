@@ -3,8 +3,8 @@ import numpy as np
 
 from config import *
 
-from ..mvae.mt.mvae.models import Trainer, FeedForwardVAE
-from ..mvae.mt import utils
+from mvae.models import Trainer, FeedForwardVAE
+from mvae import utils
 
 COMPONENTS = utils.parse_components(MODEL,FIXED_CURVATURE)
 
