@@ -12,7 +12,11 @@ import os
 import datetime
 
 COMPONENTS = utils.parse_components(MODEL,FIXED_CURVATURE)
-dataset=None
+
+
+####################
+dataset=None #TODO!!!!!!!!!!!!!!!!!!!!!!!!
+####################
 
 def setup():
 
