@@ -4,6 +4,7 @@ from config import *
 from mvae.models import Trainer, FeedForwardVAE
 from mvae import utils
 from util.util import read_mtx
+from util.stats import EpochStats
 from util.plot import plot_trace
 import matplotlib.pyplot as plt
 
