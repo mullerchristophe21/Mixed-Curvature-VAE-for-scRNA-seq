@@ -3,12 +3,12 @@ import numpy as np
 from config import *
 from mvae.models import Trainer, FeedForwardVAE
 from mvae import utils
-from util.util import read_mtx
 from util.stats import EpochStats
 from util.plot import plot_trace
 import matplotlib.pyplot as plt
+from data.scRNADataset import scRNADataset
 
-
+import json
 import os
 import datetime
 
@@ -16,7 +16,25 @@ COMPONENTS = utils.parse_components(MODEL,FIXED_CURVATURE)
 
 
 ####################
-dataset=None #TODO!!!!!!!!!!!!!!!!!!!!!!!!
+## parse data json file. one file per each batch size
+# {
+#  "data_file": "./data/adipose/adipose.mtx",
+#  "batch_files": [
+#   	"./data/adipose/adipose_batch.tsv",
+#   	"./data/adipose/adipose_batch.tsv",
+#   	"./data/adipose/adipose_batch.tsv"
+#   ]
+# }
+
+config_file = "./data/adipose/adipose.json"
+configs = json.load(open(config_file, "r"))
+
+# load dataset with batch effect files
+# dataset = scRNADataset(data_file = configs["data_file"],
+#                       batch_files = configs["batch_files"])
+# load dataset without batch effect files
+
+dataset = scRNADataset(data_file = configs["data_file"])
 ####################
 
 def setup():
@@ -64,7 +82,8 @@ def train_model():
                                 fixed_curvature= FIXED_CURVATURE)
 
     #Split data into train and test
-    train_loader, test_loader = dataset.create_loaders()
+    # create_loader require the argument batch size: int 
+    train_loader, test_loader = dataset.create_loaders(CHANGE_HERE)
     #Beta priors
     betas = utils.linear_betas(BETA_START,BETA_END,
                         end_epoch=BETA_END_EPOCH, epochs= EPOCHS)

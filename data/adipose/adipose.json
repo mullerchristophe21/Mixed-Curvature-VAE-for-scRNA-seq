@@ -1,0 +1,10 @@
+{
+ "data_file": "./data/adipose/adipose.mtx",
+ "batch_files": [
+  	"./data/adipose/adipose_batch.tsv",
+  	"./data/adipose/adipose_batch.tsv",
+  	"./data/adipose/adipose_batch.tsv"
+  ]
+}
+
+ 

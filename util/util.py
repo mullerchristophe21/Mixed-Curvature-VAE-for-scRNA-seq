@@ -1,9 +1,9 @@
 import numpy as np
 import scipy.sparse as sparse
-import tensorflow as tf
+#import tensorflow as tf
 import logging
 
-from scphere.distributions import VonMisesFisher
+#from scphere.distributions import VonMisesFisher
 
 logging.basicConfig(
     level=logging.INFO,
@@ -53,9 +53,3 @@ def transform_mtx(x, transform_type='log'):
     return x
 
 
-def read_mtx(filename, dtype='int32'):
-    from scipy.io import mmread
-
-    x = mmread(filename).astype(dtype)
-
-    return x
