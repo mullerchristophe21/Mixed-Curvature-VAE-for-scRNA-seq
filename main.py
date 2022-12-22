@@ -1,24 +1,20 @@
 import torch
 import numpy as np
-
 from config import *
-
 from mvae.models import Trainer, FeedForwardVAE
 from mvae import utils
-
 from util.util import read_mtx
 from util.plot import plot_trace
-
 import matplotlib.pyplot as plt
 
-COMPONENTS = utils.parse_components(MODEL,FIXED_CURVATURE)
 
+import os
+import datetime
+
+COMPONENTS = utils.parse_components(MODEL,FIXED_CURVATURE)
 dataset=None
 
-
 def main() -> None:
-
-
     #Check seed 
     if SEED:
         print("Using pre-set random seed:", SEED)
@@ -34,6 +30,28 @@ def main() -> None:
         torch.set_default_dtype(torch.float64)
     else:
         torch.set_default_dtype(torch.float32)
+
+
+    """
+    TODO: Create dataset and load it
+    
+    dataset = create_dataset(dataset, BATCH_SIZE, DATA)
+    
+    """
+   
+
+    #Track training progress
+    print("#####") 
+    cur_time = datetime.datetime.utcnow().isoformat()
+    print(f"VAE MODEL: Feedforward VAE; Epochs: {EPOCHS}; Time: {cur_time}; Fixed curvature: {FIXED_CURVATURE}"
+            f"Dataset: {dataset}")
+    print("####")
+    chkpt_dir = f"./chkpt/vae - {dataset}-FeedForwardVAE-{cur_time}"
+    os.makedirs(chkpt_dir)
+
+
+
+
 
     #Load model
     model = FeedForwardVAE(h_dim = H_DIM, components= COMPONENTS,
@@ -108,24 +126,26 @@ def main() -> None:
     print("Done.", flush=True)
 
 
-
+"""
     #embedding all the data
+    TODO
     save_path = None
-    #TODO
+    TODO
     
     
     batch = None
     
-     
+    
+    #Choose a datapoint to encode 
+    x = None
     z_mean = model.encode(x)
+    
+    
+    #Save encoded value
     np.savetxt(save_path +
            'cd14_mono_eryth_latent_250epoch.tsv',
            z_mean)
-
-
-
-
-
+    """
 
 if __name__ == "__main__":
     main()
