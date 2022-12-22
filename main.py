@@ -14,31 +14,21 @@ import datetime
 COMPONENTS = utils.parse_components(MODEL,FIXED_CURVATURE)
 dataset=None
 
-def main() -> None:
-    #Check seed 
+def setup():
+
     if SEED:
         print("Using pre-set random seed:", SEED)
         utils.set_seed(SEED)
-
-
     #setup device
     utils.setup_gpu(DEVICE)
     print("Running on:", DEVICE, flush=True)
-
     #setup precision
     if DOUBLES:
         torch.set_default_dtype(torch.float64)
     else:
         torch.set_default_dtype(torch.float32)
 
-
-    """
-    TODO: Create dataset and load it
-    
-    dataset = create_dataset(dataset, BATCH_SIZE, DATA)
-    
-    """
-   
+def train_model():
 
     #Track training progress
     print("#####") 
@@ -125,27 +115,56 @@ def main() -> None:
     print(flush=True)
     print("Done.", flush=True)
 
+def eval_model():
 
-"""
-    #embedding all the data
-    TODO
-    save_path = None
-    TODO
+
+    model = FeedForwardVAE(h_dim = H_DIM,
+                        components= COMPONENTS,
+                        dataset= dataset,
+                        scalar_parametrization= SCALAR_PARAMETRIZATION)     
+
+    model.load_state_dict(torch.load(CHKPT, map_location=DEVICE))
+
+    print("Loaded model: FeedForwardVAE at epoch", EPOCHS , "from" , CHKPT)
+
+
+    _, test_loader = dataset.create_loaders()
+
+    print(f"\tEpoch {EPOCHS}:\t", end="")
+    model.eval()
+
+    batch_stats = []
+    for batch_idx, (x_mb, y_mb) in enumerate(test_loader):
+        x_mb = x_mb.to(model.device)
+        reparametrized, concat_z, x_mb_ = model(x_mb)
+        stats = model.compute_batch_stats(x_mb, x_mb_, reparametrized, likelihood_n= LIKELIHOOD_N, beta = 1.)
+        batch_stats.append(stats.convert_to_float())
+
+
+
+    epoch_stats = EpochStats(batch_stats, length = len(test_loader.dataset))
+    epoch_dict = epoch_stats.to_print()
+
+    for i, component in enumerate(model.components):
+        name = f"{component.summary_name(i)}/curvature"
+        epoch_dict[name] = float(component.manifold.curvature)
+    print(epoch_dict, flush=True)
+    print("Done.", flush=True)
     
-    
-    batch = None
-    
-    
-    #Choose a datapoint to encode 
-    x = None
-    z_mean = model.encode(x)
-    
-    
-    #Save encoded value
-    np.savetxt(save_path +
-           'cd14_mono_eryth_latent_250epoch.tsv',
-           z_mean)
+    return epoch_dict
+
+
+def main() -> None:
+    #Setup config
+    setup()
+    #Train the model!
+    train_model()
+    #Evaluate the model!
+    epoch_dict = eval_model()
     """
+    do stuff with the epoch dict....
+    """
+
 
 if __name__ == "__main__":
     main()
