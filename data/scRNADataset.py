@@ -14,93 +14,130 @@
 # ==============================================================================
 
 from typing import Dict, Tuple, Optional, Any
-
 import json
 import os
+import pandas as pd
+import numpy as np
+from scipy.io import mmread
 import torch
 from torch import Tensor
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, SubsetRandomSampler
 
 
-class RepresentationDataset:
+
+# ## parse json config file
+# config_file = "./data/adipose/adipose.json"
+# configs = json.load(open(config_file, "r"))
+
+
+# data_file = configs["data_file"]
+# batch_files = configs["batch_files"]
+
+
+
+class scRNADataset:
     """
-    To load a dataset using this class, the data directory needs to have the following structure:
-    * meta.txt -- JSON file with information about labels. E.g. for CIFAR-10:
-        ```
-        {"meta":{
-            "labels": [0,1,2,3,4,5,6,7,8,9],
-            "label_names": ["airplane","automobile","bird","cat","deer","dog","frog", "horse","ship","truck"]
-        }}
-        ```
-    * train_data.pt -- Float Tensor of shape (N, D)
-    * train_labels.pt -- Int Tensor of shape (N,)
-    * test_data.pt -- Float Tensor of shape (N_Test, D)
-    * test_labels.pt -- Int Tensor of shape (N_Test,)
+    Load a dataset using this class:
+        data_file: path to a matrix data file
+        batch_files: list of batch effect file(s) 
+    1st dimension (number of rows) in data_file and batch file(s) must match
     """
 
-    def __init__(self, data_folder: str, meta: Optional[Dict[str, Any]] = None) -> None:
-        self.data_folder = data_folder
-        self.datasets: Dict[bool, torch.utils.data.TensorDataset] = {}
+    def __init__(self, data_file: str, batch_files: Optional[list] = None) -> None:
+        self.data_file = data_file
+        self.batch_files = batch_files
+        self.dataset: torch.utils.data.TensorDataset = {}
 
-        if meta is None:
-            meta_dict = self._read_meta()
+        if batch_files is not None:
+            self.batch_data = self._read_batcheff()
+            self.batch_data_dim = self.batch_data.shape[1]
         else:
-            meta_dict = meta
-        self.labels = meta_dict["labels"]
-        self.label_names = meta_dict["label_names"]
-        self.n_classes = len(self.labels)
-        if len(self.labels) != len(self.label_names):
-            raise ValueError(
-                f"Labels and label names have to be of same length ({len(self.labels)} != {len(self.label_names)}).")
+            self.batch_data = None
+            self.batch_data_dim = 0
 
-    def _read_meta(self) -> Dict[str, Any]:
-        filepath = os.path.join(self.data_folder, "meta.txt")
-        with open(filepath, "r") as file:
-            meta_dict = json.load(file)
-        return meta_dict["meta"]
-
-    def _write_meta(self, d: Dict[str, Any]) -> None:
-        filepath = os.path.join(self.data_folder, "meta.txt")
-        meta_dict = {"meta": d}
-
-        with open(filepath, "w") as file:
-            file.write(json.dumps(meta_dict))
+        self.dataset = self._read_data()
+        self.dataset_len = self.__len__()
+        self.dataset_dim = self.dataset.shape[1] - self.batch_data_dim
+        self._shuffle_split_indx()
 
     def __len__(self) -> int:
-        return self.datasets[False].tensors[0].size(0)
+        return self.dataset.size(0)
 
-    @property
-    def dim(self) -> int:
-        return self.datasets[False].tensors[0].size(1)
+    def __getitem__(self, index):
+        return self.dataset[index, :]
 
-    @staticmethod
-    def _check_dimensions(data: Tensor, labels: Tensor) -> None:
-        if data.size(0) != labels.size(0):
-            raise ValueError("Data and labels have to be of same length.")
-        if len(data.shape) != 2:
-            raise ValueError("Data has to be two dimensional (length, dimensionality).")
-        if len(labels.shape) != 1:
-            raise ValueError("Labels have to be one dimensional.")
+    def get_device(self):
+        if torch.cuda.is_available():
+            device = torch.device("cuda:0")
+        else:
+            device = torch.device("cpu")
+            return device
 
-    def load(self, train: bool) -> None:
-        train_str = "train" if train else "test"
-        with torch.no_grad():
-            data = torch.load(os.path.join(self.data_folder, f"{train_str}_data.pt"))
-            data.requires_grad = False
-            labels = torch.load(os.path.join(self.data_folder, f"{train_str}_labels.pt"))
-            labels.requires_grad = False
-            RepresentationDataset._check_dimensions(data, labels)
-            self.datasets[train] = torch.utils.data.TensorDataset(data, labels)
+    def df_to_tensor(self, df):
+        device = self.get_device()
+        return torch.from_numpy(df.values).float().to(device)
+
+    def read_mtx(self, filename, dtype='int32'):
+        x = mmread(filename).astype(dtype)
+        return x
+
+    # read batch effect file(s)
+    def _read_batcheff(self):
+        if len(self.batch_files) == 1:
+            batch_data = pd.read_csv(self.batch_files[0], header=None)
+        else:
+            list_batch = list()
+            for one_file in self.batch_files:
+                one_batch = pd.read_csv(one_file, header=None)
+                list_batch.append(one_batch)
+            batch_data = pd.concat(list_batch, axis=1)
+        return batch_data
+
+    # read data and batch effect files
+    def _read_data(self):
+        data = self.read_mtx(self.data_file).transpose().todense()
+        data = pd.DataFrame(data)
+        if self.batch_data is not None:
+            assert (
+                self.batch_data.shape[0] == data.shape[0]
+            ), "batch_data.shape: %s, data.shape: %s" % (
+                selfbatch_data.shape[0],
+                data.shape[0],
+            )
+            data = pd.concat([data, self.batch_data], axis=1)
+        else:
+            data = pd.DataFrame(data)
+        res = self.df_to_tensor(data)
+        return res
+
+    def _shuffle_split_indx(self):
+        indices = list(range(self.__len__()))
+        split = int(np.floor(0.5 * self.__len__()))
+        # np.random.seed(random_seed)
+        np.random.shuffle(indices)
+        self.train_sampler = SubsetRandomSampler(indices[:split])
+        self.test_sampler = SubsetRandomSampler(indices[split:])
 
     def create_loaders(self, batch_size: int) -> Tuple[DataLoader, DataLoader]:
-
-        def _create_loader(train: bool, batch_size: int) -> DataLoader:
-            return DataLoader(dataset=self.datasets[train],
-                              batch_size=batch_size,
-                              num_workers=8,
-                              pin_memory=True,
-                              shuffle=train)
-
-        train_loader = _create_loader(train=True, batch_size=batch_size)
-        test_loader = _create_loader(train=False, batch_size=batch_size)
+        train_loader = DataLoader(
+            dataset=self.dataset,
+            batch_size=batch_size,
+            # num_workers=8,
+            # pin_memory=True,
+            sampler=self.train_sampler,
+        )
+        test_loader = DataLoader(
+            dataset=self.dataset,
+            batch_size=batch_size,
+            # num_workers=8,
+            # pin_memory=True,
+            sampler=self.test_sampler,
+        )
         return train_loader, test_loader
+
+
+# ee = scRNADataset(configs['data_file'])
+# aa = scRNADataset(configs['data_file'], configs['batch_files'])
+# bb, cc = aa.create_loaders(batch_size=100)
+# ee = aa.create_loaders(batch_size=100)
+# type(bb)
