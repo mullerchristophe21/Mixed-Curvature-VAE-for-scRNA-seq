@@ -21,32 +21,29 @@ import numpy as np
 from scipy.io import mmread
 import torch
 from torch import Tensor
+import torch.nn.functional as F
 from torch.utils.data import DataLoader, SubsetRandomSampler
+from data.vae_dataset import VaeDataset
+from torch.distributions import Normal
 
 
 
-# ## parse json config file
-# config_file = "./data/adipose/adipose.json"
-# configs = json.load(open(config_file, "r"))
-
-
-# data_file = configs["data_file"]
-# batch_files = configs["batch_files"]
-
-
-
-class scRNADataset:
+class scRNADataset(VaeDataset):
     """
     Load a dataset using this class:
         data_file: path to a matrix data file
+        label_file: path to a label data file
         batch_files: list of batch effect file(s) 
     1st dimension (number of rows) in data_file and batch file(s) must match
+    1st dimension (number of rows) in data_file and label file must match
+    
     """
 
-    def __init__(self, data_file: str, batch_files: Optional[list] = None) -> None:
+    def __init__(self, batch_size: int, data_folder: str, data_file: str, label_file: str, batch_files: Optional[list] = None) -> None:
         self.data_file = data_file
         self.batch_files = batch_files
-        self.dataset: torch.utils.data.TensorDataset = {}
+        self.label_file = label_file
+        #self.dataset: torch.utils.data.TensorDataset = {}
 
         if batch_files is not None:
             self.batch_data = self._read_batcheff()
@@ -55,16 +52,28 @@ class scRNADataset:
             self.batch_data = None
             self.batch_data_dim = 0
 
-        self.dataset = self._read_data()
+        self.data = self._read_data()
+        self.labels, self.label_names = self._read_label()
+        self.dataset = torch.utils.data.TensorDataset(self.data,self.labels)
         self.dataset_len = self.__len__()
-        self.dataset_dim = self.dataset.shape[1] - self.batch_data_dim
+        self._in_dim = self.dataset.tensors[0].shape[1] - self.batch_data_dim
         self._shuffle_split_indx()
 
-    def __len__(self) -> int:
-        return self.dataset.size(0)
+        super().__init__(batch_size, img_dims=None, in_dim=self._in_dim) #FIXME: correct dimensions? -Colin
+        self.data_folder = data_folder
 
-    def __getitem__(self, index):
-        return self.dataset[index, :]
+    def __len__(self) -> int:
+        return self.dataset.tensors[0].size(0)
+
+    #def __getitem__(self, index):
+    #   return self.dataset[index, :]
+    
+    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Generates one sample
+        """
+        data, labels = self.dataset[idx], self.labels[idx]
+        return torch.Tensor(data), torch.Tensor(labels)
 
     def get_device(self):
         if torch.cuda.is_available():
@@ -92,6 +101,14 @@ class scRNADataset:
                 list_batch.append(one_batch)
             batch_data = pd.concat(list_batch, axis=1)
         return batch_data
+    
+    # read label
+    def _read_label(self):
+        label_names = pd.read_csv(self.label_file, header=None)
+        label_as_fct = pd.DataFrame(pd.factorize(label_names[0])[0]+1)
+        label_data = self.df_to_tensor(label_as_fct)
+        return label_data, label_names
+    
 
     # read data and batch effect files
     def _read_data(self):
@@ -101,7 +118,7 @@ class scRNADataset:
             assert (
                 self.batch_data.shape[0] == data.shape[0]
             ), "batch_data.shape: %s, data.shape: %s" % (
-                selfbatch_data.shape[0],
+                self.batch_data.shape[0],
                 data.shape[0],
             )
             data = pd.concat([data, self.batch_data], axis=1)
@@ -134,10 +151,44 @@ class scRNADataset:
             sampler=self.test_sampler,
         )
         return train_loader, test_loader
+        
+    def reconstruction_loss(self, x_mb_: torch.Tensor, x_mb: torch.Tensor) -> torch.Tensor:
+        return -Normal(x_mb_, 10*torch.ones_like(x_mb_)).log_prob(x_mb) #FIXME: negative binomial loss -Colin
 
 
-# ee = scRNADataset(configs['data_file'])
-# aa = scRNADataset(configs['data_file'], configs['batch_files'])
-# bb, cc = aa.create_loaders(batch_size=100)
-# ee = aa.create_loaders(batch_size=100)
-# type(bb)
+# # ee = scRNADataset(configs['data_file'])
+# aa = scRNADataset(batch_size=100,
+#                   data_folder = os.path.dirname(configs['data_file']), 
+#                   data_file = configs['data_file'], 
+# #                   label_file = configs['label_file'], 
+# #                   batch_files = configs['batch_files']
+# #                  )
+# aa = scRNADataset(batch_size=100,
+#                    data_folder = os.path.dirname(configs['data_file']), 
+#                    data_file = configs['data_file'], 
+#                    label_file = configs['label_file']
+#                   )
+# # type(aa)
+# # bb, cc = aa.create_loaders(batch_size=100)
+# # ee = aa.create_loaders(batch_size=100)
+# # type(bb)
+
+# ls = list()
+# for x in aa:
+#     ls.append(x)
+    
+#     print(x.size())
+
+# vv = ls[0]
+# bb.dataset.shape
+
+# [0] + 1
+
+
+# ## parse json config file
+# config_file = "./data/adipose/adipose.json"
+# configs = json.load(open(config_file, "r"))
+
+
+# data_file = configs["data_file"]
+# batch_files = configs["batch_files"]

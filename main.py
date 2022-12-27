@@ -16,9 +16,10 @@ COMPONENTS = utils.parse_components(MODEL,FIXED_CURVATURE)
 
 
 ####################
-## parse data json file. one file per each batch size
+# ## parse data json file. one file per each batch size
 # {
 #  "data_file": "./data/adipose/adipose.mtx",
+#  "label_file": "./data/adipose/adipose_celltype.tsv",
 #  "batch_files": [
 #   	"./data/adipose/adipose_batch.tsv",
 #   	"./data/adipose/adipose_batch.tsv",
@@ -26,15 +27,25 @@ COMPONENTS = utils.parse_components(MODEL,FIXED_CURVATURE)
 #   ]
 # }
 
+
+
 config_file = "./data/adipose/adipose.json"
 configs = json.load(open(config_file, "r"))
 
 # load dataset with batch effect files
-# dataset = scRNADataset(data_file = configs["data_file"],
-#                       batch_files = configs["batch_files"])
-# load dataset without batch effect files
+# aa = scRNADataset(batch_size=100,
+#                   data_folder = os.path.dirname(configs['data_file']), 
+#                   data_file = configs['data_file'], 
+#                   label_file = configs['label_file'], 
+#                   batch_files = configs['batch_files']
+#                  )
 
-dataset = scRNADataset(data_file = configs["data_file"])
+dataset = scRNADataset(batch_size=BATCH_SIZE,
+                   data_folder = os.path.dirname(configs['data_file']), 
+                   data_file = configs['data_file'], 
+                   label_file = configs['label_file'] 
+                  # batch_files = configs['batch_files']
+                  )
 ####################
 
 def setup():
@@ -75,7 +86,8 @@ def train_model():
                     train_statistics= TRAIN_STATISTICS,
                     show_embeddings= SHOW_EMBEDDINGS,
                     export_embeddings= EXPORT_EMBEDDINGS,
-                    test_every= TEST_EVERY)
+                    test_every= TEST_EVERY,
+                    img_dims=None)
 
     #Load optimizer
     optimizer = trainer.build_optimizer(learning_rate=LEARNING_RATE,
@@ -83,7 +95,8 @@ def train_model():
 
     #Split data into train and test
     # create_loader require the argument batch size: int 
-    train_loader, test_loader = dataset.create_loaders(CHANGE_HERE)
+    train_loader, test_loader = dataset.create_loaders(BATCH_SIZE)
+    
     #Beta priors
     betas = utils.linear_betas(BETA_START,BETA_END,
                         end_epoch=BETA_END_EPOCH, epochs= EPOCHS)
@@ -152,7 +165,7 @@ def eval_model():
     print("Loaded model: FeedForwardVAE at epoch", EPOCHS , "from" , CHKPT)
 
 
-    _, test_loader = dataset.create_loaders()
+    _, test_loader = dataset.create_loaders(BATCH_SIZE)
 
     print(f"\tEpoch {EPOCHS}:\t", end="")
     model.eval()
@@ -184,7 +197,7 @@ def main() -> None:
     #Train the model!
     train_model()
     #Evaluate the model!
-    epoch_dict = eval_model()
+    epoch_dict = eval_model() #FIXME: unable to properly access chkpt file -Colin
     """
     do stuff with the epoch dict....
     """
