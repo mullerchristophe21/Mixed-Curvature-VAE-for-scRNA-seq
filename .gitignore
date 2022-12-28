@@ -1,0 +1,9 @@
+*.ipynb
+.ipynb_*
+*.chkpt
+events.*
+*.pyc
+*/*/*/__pycache__/
+*/*/__pycache__/
+*/__pycache__/
+!.gitignore
