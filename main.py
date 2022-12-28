@@ -6,7 +6,7 @@ from mvae import utils
 from util.stats import EpochStats
 from util.plot import plot_trace
 import matplotlib.pyplot as plt
-from data.scRNADataset import scRNADataset, scRNADataset2
+from data.scRNADataset import scRNADataset
 
 import json
 import os
@@ -40,11 +40,12 @@ configs = json.load(open(config_file, "r"))
 #                   batch_files = configs['batch_files']
 #                  )
 
-dataset = scRNADataset2(batch_size=BATCH_SIZE,
+dataset = scRNADataset(batch_size=BATCH_SIZE,
                    data_folder = os.path.dirname(configs['data_file']), 
                    data_file = configs['data_file'], 
                    label_file = configs['label_file'],
-                   batch_files = configs['batch_files']
+                   batch_files = configs['batch_files'],
+                   doubles=DOUBLES
                   )
 ####################
 
