@@ -23,7 +23,7 @@ import torch
 from ..data import create_dataset
 from ..mvae import utils
 from ..mvae.models import FeedForwardVAE, ConvolutionalVAE
-from ..utils import str2bool
+from ..util import str2bool
 
 from PIL import Image
 

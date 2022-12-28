@@ -20,7 +20,7 @@ import torch.nn as nn
 from torch import Tensor
 
 from .vae import ModelVAE
-from ...data import VaeDataset
+from data.vae_dataset import VaeDataset
 from ..components import Component
 
 

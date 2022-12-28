@@ -1,5 +1,6 @@
 {
  "data_file": "./data/adipose/adipose.mtx",
+ "label_file": "./data/adipose/adipose_celltype.tsv",
  "batch_files": [
   	"./data/adipose/adipose_batch.tsv",
   	"./data/adipose/adipose_batch.tsv",

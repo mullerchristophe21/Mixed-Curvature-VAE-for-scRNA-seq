@@ -41,9 +41,9 @@ SCALAR_PARAMETRIZATION = False
 #Whether to fix curvature to (-1,0,1)
 FIXED_CURVATURE = True
 #Use float32 or float64, default float32
-DOUBLES = True
+DOUBLES = False
 #Beta-VAE beginning value
-BETA_START = 1.0
+BETA_START = 5.0
 #Beta-VAE end value
 BETA_END = 1.0
 #Beta-VAE end epoch (0 to epochs-1)
@@ -51,4 +51,4 @@ BETA_END_EPOCH = 1
 #How many samples to use for LL estimation. Value 0 disables LL estimation
 LIKELIHOOD_N = 500
 #DIRECTORY where checkpoints are stored
-CHKPT = ""
+CHKPT = "/Users/Colin/code/scMVAE_v2/chkpt/497.chkpt"
