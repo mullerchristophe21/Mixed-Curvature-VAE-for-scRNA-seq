@@ -52,11 +52,12 @@ class scRNADataset(VaeDataset):
         if batch_files is not None:
             self.batch_data_pd = self._read_batcheff()
             self.batch_data = self.df_to_tensor(df = self.batch_data_pd)
-        else:
+        else:   
             self.batch_data_pd = self.create_dummy_batches()
             self.batch_data = self.df_to_tensor(df = self.batch_data_pd)
-       
+                 
         self.batch_data_dim = self.batch_data.shape[1]
+
         self.data = self._read_data()
         self.labels, self.label_names = self._read_label()
         
@@ -98,6 +99,9 @@ class scRNADataset(VaeDataset):
         x = mmread(filename).astype(dtype)
         return x
 
+    def get_batch_effect(self):
+        return self.batch_data
+    
     # read batch effect file(s)
     def _read_batcheff(self):
         if len(self.batch_files) == 1:
@@ -109,7 +113,7 @@ class scRNADataset(VaeDataset):
                 list_batch.append(one_batch)
             batch_data = pd.concat(list_batch, axis=1)
         return batch_data
-    
+
     # read label
     def _read_label(self):
         label_names = pd.read_csv(self.label_file, header=None)
