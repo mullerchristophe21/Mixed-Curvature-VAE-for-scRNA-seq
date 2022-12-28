@@ -113,6 +113,7 @@ class scRNADataset(VaeDataset):
     # read data and batch effect files
     def _read_data(self):
         data = self.read_mtx(self.data_file).transpose().todense()
+        data = np.true_divide(data, data.max())
         data = pd.DataFrame(data)
         if self.batch_data is not None:
             assert (
@@ -156,39 +157,4 @@ class scRNADataset(VaeDataset):
         return -Normal(x_mb_, 10*torch.ones_like(x_mb_)).log_prob(x_mb) #FIXME: negative binomial loss -Colin
 
 
-# # ee = scRNADataset(configs['data_file'])
-# aa = scRNADataset(batch_size=100,
-#                   data_folder = os.path.dirname(configs['data_file']), 
-#                   data_file = configs['data_file'], 
-# #                   label_file = configs['label_file'], 
-# #                   batch_files = configs['batch_files']
-# #                  )
-# aa = scRNADataset(batch_size=100,
-#                    data_folder = os.path.dirname(configs['data_file']), 
-#                    data_file = configs['data_file'], 
-#                    label_file = configs['label_file']
-#                   )
-# # type(aa)
-# # bb, cc = aa.create_loaders(batch_size=100)
-# # ee = aa.create_loaders(batch_size=100)
-# # type(bb)
 
-# ls = list()
-# for x in aa:
-#     ls.append(x)
-    
-#     print(x.size())
-
-# vv = ls[0]
-# bb.dataset.shape
-
-# [0] + 1
-
-
-# ## parse json config file
-# config_file = "./data/adipose/adipose.json"
-# configs = json.load(open(config_file, "r"))
-
-
-# data_file = configs["data_file"]
-# batch_files = configs["batch_files"]
