@@ -32,6 +32,8 @@ class FeedForwardVAE(ModelVAE):
 
         self.in_dim = dataset.in_dim
 
+        self.h_dim = h_dim
+
         # 1 hidden layer encoder
         self.fc_e0 = nn.Linear(dataset.in_dim, h_dim)
 
@@ -45,7 +47,10 @@ class FeedForwardVAE(ModelVAE):
         assert dim == self.in_dim
         x = x.view(bs, self.in_dim)
 
-        x = torch.relu(self.fc_e0(x))
+
+
+        batch_norm = nn.BatchNorm1d(self.h_dim)
+        x = torch.relu(batch_norm(self.fc_e0(x)))
 
         return x.view(bs, -1)
 
@@ -53,6 +58,9 @@ class FeedForwardVAE(ModelVAE):
         assert len(concat_z.shape) >= 2
         bs = concat_z.size(-2)
 
+
+
+       
         x = torch.relu(self.fc_d0(concat_z))
         x = self.fc_logits(x)
 

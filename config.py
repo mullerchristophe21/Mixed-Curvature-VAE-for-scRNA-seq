@@ -51,4 +51,4 @@ BETA_END_EPOCH = 1
 #How many samples to use for LL estimation. Value 0 disables LL estimation
 LIKELIHOOD_N = 500
 #DIRECTORY where checkpoints are stored
-CHKPT = "/Users/Colin/code/scMVAE_v2/chkpt/497.chkpt"
+CHKPT = "~/ETH/DeepLearning/Mixed-scRNA/chkpt"
