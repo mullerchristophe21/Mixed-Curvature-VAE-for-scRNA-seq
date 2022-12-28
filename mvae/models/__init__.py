@@ -15,10 +15,10 @@
 
 from .train import Trainer
 from .ffnn_vae import FeedForwardVAE
-from .conv_vae import ConvolutionalVAE
+
 
 __all__ = [
-    "ConvolutionalVAE",
+   
     "FeedForwardVAE",
     "Trainer",
 ]

@@ -171,7 +171,7 @@ class scRNADataset(VaeDataset):
         return train_loader, test_loader
         
     def reconstruction_loss(self, x_mb_: torch.Tensor, x_mb: torch.Tensor) -> torch.Tensor:
-        return -Normal(x_mb_, 10*torch.ones_like(x_mb_)).log_prob(x_mb) #FIXME: negative binomial loss -Colin
+        return -Normal(x_mb_, 0.5*torch.ones_like(x_mb_)).log_prob(x_mb) #FIXME: negative binomial loss -Colin
 
 
 #########################################################

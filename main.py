@@ -45,9 +45,8 @@ dataset = scRNADataset(batch_size=BATCH_SIZE,
                    data_file = configs['data_file'], 
                    label_file = configs['label_file'],
                    batch_files = configs['batch_files'],
-                   doubles=DOUBLES
-                  )
-####################
+                   doubles=DOUBLES)
+
 
 def setup():
 
