@@ -41,7 +41,7 @@ SCALAR_PARAMETRIZATION = False
 #Whether to fix curvature to (-1,0,1)
 FIXED_CURVATURE = True
 #Use float32 or float64, default float32
-DOUBLES = False
+DOUBLES = True
 #Beta-VAE beginning value
 BETA_START = 5.0
 #Beta-VAE end value

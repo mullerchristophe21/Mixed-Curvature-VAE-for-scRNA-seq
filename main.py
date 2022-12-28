@@ -43,10 +43,10 @@ configs = json.load(open(config_file, "r"))
 dataset = scRNADataset(batch_size=BATCH_SIZE,
                    data_folder = os.path.dirname(configs['data_file']), 
                    data_file = configs['data_file'], 
-                   label_file = configs['label_file'], 
-                 #  batch_files = configs['batch_files']
-                  )
-####################
+                   label_file = configs['label_file'],
+                   batch_files = configs['batch_files'],
+                   doubles=DOUBLES)
+
 
 def setup():
 
