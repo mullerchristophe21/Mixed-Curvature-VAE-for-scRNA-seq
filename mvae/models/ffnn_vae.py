@@ -55,10 +55,8 @@ class FeedForwardVAE(ModelVAE):
 
 
         self.batch_norm = nn.BatchNorm1d(self.h_dim)
-        self.forward_batch = nn.Linear(dataset.batch_data_dim, 1)
 
 
-        #batch norm layer
         
 
 
@@ -81,18 +79,11 @@ class FeedForwardVAE(ModelVAE):
         assert len(concat_z.shape) >= 2 
         bs = concat_z.size(-2)
 
-        """
-        Read batchEffect
-        """
-      
-
-
+        
         concat_z = torch.cat((concat_z,self.batch_saver.unsqueeze(1)),dim=1)
        
-
         x = self.fc_d0(concat_z)
-        
-        
+         
         x = torch.relu(x)
         x = self.fc_logits(x)
 
