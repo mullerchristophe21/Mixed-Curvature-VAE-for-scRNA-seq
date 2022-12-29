@@ -66,12 +66,27 @@ class FeedForwardVAE(ModelVAE):
 
     def decode(self, concat_z: Tensor) -> Tensor:
         assert len(concat_z.shape) >= 2 
+        
         bs = concat_z.size(-2)
-        #concat the batch effect to latent space        
-        concat_z = torch.cat((concat_z,self.batch_saver),dim=1)
+        #concat the batch effect to latent space     
+        i = 1
+        if len(concat_z.shape) > 2:
+            self.batch_saver = self.batch_saver.expand(500,self.batch_saver.shape[0],self.batch_saver.shape[1])
+            i = 2
+
+        concat_z = torch.cat((concat_z,self.batch_saver),dim=i)
+
         #forward pass
         x = self.fc_d0(concat_z)
+       
+
+
+
+
+
+
         x = torch.relu(x)
+        
         x = self.fc_logits(x)
 
         
