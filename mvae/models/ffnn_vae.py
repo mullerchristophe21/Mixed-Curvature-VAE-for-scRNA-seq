@@ -38,16 +38,29 @@ class FeedForwardVAE(ModelVAE):
 
 
         #empty tensor 
+        self.batch_saver = None
 
 
         self.batch_data = dataset.get_batch_effect()
+        self.batch_data_dim = self.batch_data.shape[1]
 
         # 1 hidden layer encoder
-        self.fc_e0 = nn.Linear(dataset.in_dim, h_dim)
+        self.fc_e0 = nn.Linear(dataset.in_dim , h_dim)
 
         # 1 hidden layer decoder
-        self.fc_d0 = nn.Linear(self.total_z_dim, h_dim)
-        self.fc_logits = nn.Linear(h_dim, dataset.in_dim)
+        self.fc_d0 = nn.Linear(self.total_z_dim + 1, h_dim)
+        self.fc_logits = nn.Linear(h_dim, dataset.in_dim) 
+
+
+
+
+        self.batch_norm = nn.BatchNorm1d(self.h_dim)
+        self.forward_batch = nn.Linear(dataset.batch_data_dim, 1)
+
+
+        #batch norm layer
+        
+
 
     def encode(self, x: Tensor) -> Tensor:
         assert len(x.shape) == 2
@@ -55,10 +68,12 @@ class FeedForwardVAE(ModelVAE):
         assert dim == self.in_dim
         x = x.view(bs, self.in_dim)
 
-
-
-        batch_norm = nn.BatchNorm1d(self.h_dim)
-        x = torch.relu(batch_norm(self.fc_e0(x)))
+        
+        
+        self.batch_saver = x[:,-self.batch_data_dim]
+        
+    
+        x = torch.relu(self.batch_norm(self.fc_e0(x)))
 
         return x.view(bs, -1)
 
@@ -69,10 +84,14 @@ class FeedForwardVAE(ModelVAE):
         """
         Read batchEffect
         """
-        
-     
-        torch.cat((concat_z.flatten(), self.batch_data.flatten()),0)
+      
+
+
+        concat_z = torch.cat((concat_z,self.batch_saver.unsqueeze(1)),dim=1)
+       
+
         x = self.fc_d0(concat_z)
+        
         
         x = torch.relu(x)
         x = self.fc_logits(x)
