@@ -48,7 +48,7 @@ class FeedForwardVAE(ModelVAE):
         self.fc_e0 = nn.Linear(dataset.in_dim , h_dim)
 
         # 1 hidden layer decoder
-        self.fc_d0 = nn.Linear(self.total_z_dim + 1, h_dim)
+        self.fc_d0 = nn.Linear(self.total_z_dim + self.batch_data_dim, h_dim)
         self.fc_logits = nn.Linear(h_dim, dataset.in_dim) 
 
 
@@ -68,7 +68,7 @@ class FeedForwardVAE(ModelVAE):
 
         
         
-        self.batch_saver = x[:,-self.batch_data_dim]
+        self.batch_saver = x[:,-self.batch_data_dim:]
         
     
         x = torch.relu(self.batch_norm(self.fc_e0(x)))
@@ -80,7 +80,7 @@ class FeedForwardVAE(ModelVAE):
         bs = concat_z.size(-2)
 
         
-        concat_z = torch.cat((concat_z,self.batch_saver.unsqueeze(1)),dim=1)
+        concat_z = torch.cat((concat_z,self.batch_saver),dim=1)
        
         x = self.fc_d0(concat_z)
          
