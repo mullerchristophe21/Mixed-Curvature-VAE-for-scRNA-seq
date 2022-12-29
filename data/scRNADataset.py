@@ -24,7 +24,7 @@ from torch import Tensor
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, SubsetRandomSampler
 from data.vae_dataset import VaeDataset
-from torch.distributions import Normal
+from torch.distributions import Normal, NegativeBinomial
 
 
 
@@ -175,7 +175,15 @@ class scRNADataset(VaeDataset):
         return train_loader, test_loader
         
     def reconstruction_loss(self, x_mb_: torch.Tensor, x_mb: torch.Tensor) -> torch.Tensor:
-        return -Normal(x_mb_, 0.5*torch.ones_like(x_mb_)).log_prob(x_mb) #FIXME: negative binomial loss -Colin
+        x_mb_nonnegative = torch.add(torch.nn.functional.relu(x_mb_), 0.00001)
+
+        log_prob = -NegativeBinomial(x_mb_nonnegative, 0.5 * torch.ones_like(x_mb_)).log_prob(x_mb)
+
+        scale_penalty = 1
+        error = torch.sub(x_mb_,x_mb)
+        penatly_term = scale_penalty * (error * error)
+
+        return torch.add(log_prob,penatly_term) 
 
 
 #########################################################

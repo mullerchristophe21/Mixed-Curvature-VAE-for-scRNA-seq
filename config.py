@@ -15,11 +15,11 @@ BATCH_SIZE = 100
 #learning rate
 LEARNING_RATE = 1e-3
 #number of epochs
-EPOCHS = 30
+EPOCHS = 500
 #number of epochs
-WARMUP = 1
+WARMUP = 100
 #number of epochs
-LOOKAHEAD = 1
+LOOKAHEAD = 50
 #model latent space description
 MODEL = "h2,s2,e2"
 #Universal training scheme
@@ -51,4 +51,4 @@ BETA_END_EPOCH = 1
 #How many samples to use for LL estimation. Value 0 disables LL estimation
 LIKELIHOOD_N = 500
 #DIRECTORY where checkpoints are stored
-CHKPT = "C:/Users/mulle/OneDrive/Bureau/Project_DL__code/chkpt"
+CHKPT = "~/ETH/DeepLearning/Mixed-scRNA/chkpt"
