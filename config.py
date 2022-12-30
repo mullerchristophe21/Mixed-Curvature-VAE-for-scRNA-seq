@@ -51,4 +51,4 @@ BETA_END_EPOCH = 1
 #How many samples to use for LL estimation. Value 0 disables LL estimation
 LIKELIHOOD_N = 500
 #DIRECTORY where checkpoints are stored
-CHKPT = "~/ETH/DeepLearning/Mixed-scRNA/chkpt"
+# CHKPT = r"C:\Users\mulle\OneDrive\Bureau\Project_DL__code\chkpt"

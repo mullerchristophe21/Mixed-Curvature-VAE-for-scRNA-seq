@@ -66,11 +66,11 @@ def train_model():
 
     #Track training progress
     print("#####") 
-    cur_time = datetime.datetime.utcnow().isoformat()
+    cur_time = datetime.datetime.utcnow().isoformat().replace(":",'_')
     print(f"VAE MODEL: Feedforward VAE; Epochs: {EPOCHS}; Time: {cur_time}; Fixed curvature: {FIXED_CURVATURE}"
             f"Dataset: {dataset}")
     print("####")
-    chkpt_dir = f"./chkpt/vae - {dataset}-FeedForwardVAE-{cur_time}"
+    chkpt_dir = f"./chkpt/vae-FeedForwardVAE-{cur_time}"
     os.makedirs(chkpt_dir)
 
 
@@ -160,6 +160,10 @@ def eval_model():
                         dataset= dataset,
                         scalar_parametrization= SCALAR_PARAMETRIZATION)     
 
+    directory = os.scandir("./chkpt/")
+    for file in directory:
+        if file.name[0].isdigit():
+            CHKPT = "./chkpt/" + file.name
     model.load_state_dict(torch.load(CHKPT, map_location=DEVICE))
 
     print("Loaded model: FeedForwardVAE at epoch", EPOCHS , "from" , CHKPT)
